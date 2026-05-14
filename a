@@ -1,363 +1,419 @@
-CSS
+<?php
 
-.radiobox
-{
-  height:380px;
-  width:100%;
-}
-header
-{
-  width: 100%;
-  height: 60px;
-  align-items: center;
-  text-align: center;
-  background-color:rgb(16, 77, 168);
-  color:white;
-  padding-top: 10px;
-}
-footer
-{
-  width: 100%;
-  height: 40px;
-  align-items: center;
-  text-align: center;
-  background-color:rgb(16, 77, 168);
-  color:white;
-  padding-top: 20px;
-}
-.container
-{
-  display: flex;
-  width:100%;
-  height: 400px;;
-}
-.sidebar
-{
-  width: 18%;
-  height: 390px;
-  background-color: rgb(156, 185, 211);
-  padding-left:40px;
-  padding-top: 10px;
-  color: rgb(58, 133, 238);
-}
-.main
-{
-  width: 82%;
-  height: 380px;
-  background-color: lightgray;
-  padding:10px;
-  color: rgb(58, 133, 238);
-}
-*
-{
-  margin:0;
-  padding :0;
-}
+namespace App\Http\Controllers;
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
+use Illuminate\Http\Request;
+use App\Models\Employee;
 
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+class EmployeeController extends Controller {
+
+  public function index() {
+    $empl = Employee:: all();
+    return view('home', compact('empl'));
+
+    // $employee = Employee::all();
+    // return view('home',compact('employee'));
+  }
+
+  public function create() {
+    return view('reg');
+  }
+
+
+  public function store(Request $request) {
+    $data = $request -> validate([
+      'name'=> 'required|min:3',
+      'email'=> 'required|email|unique:employees,email',
+      'phone'=> 'required|numeric|digits:10',
+      'designation'=> 'required',
+      'salary'=> 'required|numeric|min:0'
+    ], [
+      'name.required'=> 'Please enter your name',
+      'name.min'=> 'Name must contain at least 3 characters',
+      'email.required'=> 'Please enter your email',
+      'email.unique'=> 'Email already exists',
+      'phone.required'=> 'Please enter your phone',
+      'phone.numeric'=> 'Phone number must contain only numbers',
+      'phone.digits'=> 'Phone number must contain exactly 10 digits',
+      'designation.required'=> 'Please enter your designation',
+      'salary.required'=> 'Please enter your salary',
+      'salary.numeric'=> 'Please enter a valid salary'
+    ]);
+
+    $result = Employee:: create($data);
+
+    if ($result) {
+      return redirect() -> route('emp.home');
+    }
+    else {
+      return 'Something went wrong';
+    }
+
+  }
+
+
+  public function show(string $id) {
+
+  }
+
+
+  public function edit(string $id) {
+    $emp = Employee:: findOrFail($id);
+    return view('edit', compact('emp'));
+  }
+
+
+  public function update(Request $request, string $id) {
+    $data = $request -> validate([
+      'name'=> 'required|min:3',
+      'email'=> 'required|email|unique:employees,email,'.$id,
+      'phone'=> 'required|digits:10',
+      'designation'=> 'required',
+      'salary'=> 'required|numeric|min:0'
+
+    ], [
+      'name.required'=> 'Please enter your name',
+      'email.required'=> 'Please enter your email',
+      'email.unique'=> 'Email already exists',
+      'phone.required'=> 'Please enter your phone',
+      'designation.required'=> 'Please enter your designation',
+      'salary.required'=> 'Please enter your salary',
+
+      'name.min'=> 'Name must contain at least 3 characters',
+      'email.email'=> 'Please enter a valid email',
+      'phone.digits'=> 'Phone number must contain exactly 10 digits',
+      'phone.numeric'=> 'Phone number must contain only numbers',
+      'salary.numeric'=> 'Salary must be a valid number',
+      'salary.min'=> 'Salary must be greater than or equal to 0'
+    ]);
+
+
+    $emp = Employee:: find($id);
+    $emp -> update($data);
+
+    return redirect() -> route('emp.home');
+
+  }
+
+
+  public function destroy(string $id) {
+    $emp = Employee:: find($id);
+    $emp -> delete ();
+    return redirect() -> route('emp.home');
   }
 }
 
 
-.icon {
-  margin-bottom: 16px;
-  width: 22px;
-  height: 22px;
-}
+<?php
 
-ul {
-  list-style: none;
-  padding: 0;
-  gap: 8px;
-  margin: 32px 0 0;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-  .logo {
-    height: 18px;
+return new class extends Migration {
+  /**
+   * Run the migrations.
+   */
+  public function up(): void {
+    Schema:: create('employees', function (Blueprint $table) {
+      $table -> id();
+      $table -> string('name', 100);
+      $table -> string('email', 100) -> unique();
+      $table -> string('phone', 15);
+      $table -> string('designation', 50);
+      $table -> decimal('salary', 10, 2);
+      $table -> timestamps();
+    });
   }
 
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
+  public function down(): void {
+    Schema:: dropIfExists('employees');
   }
+};
 
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
 
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
+<?php
 
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+namespace App\Http\Controllers;
+
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
+
+class Controller extends BaseController {
+    use AuthorizesRequests, ValidatesRequests;
 }
 
 
-main
+<?php
 
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
+namespace App\Models;
 
-createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
-)
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Employee extends Model {
+    use HasFactory;
 
 
-app
+  protected $fillable = [
+    'name',
+    'email',
+    'phone',
+    'designation',
+    'salary'
+  ];
+
+}
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmployeeController;
 
 
-  import './App.css';
-  import Header from './Header';
-  import Footer from './Footer';
-  import Sidebar from './Sidebar';
 
-  export default function App() {
+Route:: controller(EmployeeController:: class) -> group(function () {
 
-    return(
+  Route:: get('/home', 'index') -> name('emp.home');
 
-      <div className='app'>
+  Route:: get('/reg', 'create') -> name('emp.reg');
+  Route:: post('/store', 'store') -> name('emp.store');
 
-        <Header />
-          <Sidebar />
-        <Footer />
-        
+  Route:: get('/edit/{id}', 'edit') -> name('emp.edit');
+  Route:: post('/update/{id}', 'update') -> name('emp.update');
+
+  Route:: get('/delete/{id}', 'destroy') -> name('emp.delete');
+
+});
+<!DOCTYPE html >
+  <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data - bs - theme = "dark" >
+    <head>
+    <meta charset="utf-8" >
+      <meta name="viewport" content = "width=device-width, initial-scale=1" >
+
+        <title>Exam </title>
+
+        < !--Fonts -->
+          <link rel="preconnect" href = "https://fonts.bunny.net" >
+            <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel = "stylesheet" />
+
+              <link href="{{asset('css/bootstrap.min.css')}}" rel = "stylesheet" >
+                <script src="{{asset('js/bootstrap.bundle.min.js')}}" > </script>
+
+                  < !--Styles -->
+                    <style>
+                    </style>
+                    </head>
+                    < body >
+                    <div class="container mt-5" >
+                      <div class="row" >
+                        <div class="col-md-8" >
+                          <h1>Employee List </h1>
+                            </div>
+                            < div class="col-md-4" >
+                              <a href="{{ route('emp.reg')}}" class="btn btn-success" > Add Employee </a>
+                                </div>
+                                </div>
+
+                                < table class="table table-striped mt-5" >
+                                  <thead>
+                                  <tr>
+                                  <th>ID </th>
+                                  < th > Name </th>
+                                  < th > Email </th>
+                                  < th > Phone </th>
+                                  < th > Designation </th>
+                                  < th > Salary </th>
+                                  < th > Actions </th>
+                                  </tr>
+                                  </thead>
+                                  <tbody>
+
+@foreach($empl as $e)
+<tr>
+  <td>{{ $e -> id }}</td>
+    < td > {{ $e -> name }}</td>
+      < td > {{ $e -> email }}</td>
+        < td > {{ $e -> phone }}</td>
+          < td > {{ $e -> designation }}</td>
+            < td > {{ $e -> salary }}</td>
+              < td >
+              <a href="{{ route('emp.edit',$e->id) }}" class="btn btn-warning" > Edit </a>
+                < a href = "{{ route('emp.delete',$e->id) }}" class="btn btn-danger" > Delete </a>
+                  </td>
+                  </tr>
+@endforeach
+</tbody>
+  </table>
+
+
+
+
+
+  </div>
+  </body>
+  </html>
+
+
+  < !DOCTYPE html >
+    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data - bs - theme = "dark" >
+      <head>
+      <meta charset="utf-8" >
+        <meta name="viewport" content = "width=device-width, initial-scale=1" >
+
+          <title>Exam </title>
+
+          < !--Fonts -->
+            <link rel="preconnect" href = "https://fonts.bunny.net" >
+              <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel = "stylesheet" />
+
+                <link href="{{asset('css/bootstrap.min.css')}}" rel = "stylesheet" >
+                  <script src="{{asset('js/bootstrap.bundle.min.js')}}" > </script>
+
+
+                    </head>
+                    < body >
+                    <div class="container mt-5" >
+                      <h1 class="h1" > Edit Employee </h1>
+
+                        < form action = "{{ route('emp.update',$emp->id) }}" method = "post" class="mt-5 w-75" >
+                          @csrf
+                          < div class="mb-3 row" >
+                            <label for= "" class= "col-md-2" > Name </label>
+                              < div class= "col-md-6" >
+                              <input type= "text" name = "name" id = "" class="form-control" value = "{{$emp->name}}" >
+                                @error('name')
+                                < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Email </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "email" id = "" class="form-control" value = "{{$emp->email}}" >
+        @error('email')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Phone </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "phone" id = "" class="form-control" value = "{{$emp->phone}}" >
+        @error('phone')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Designation </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "designation" id = "" class="form-control" value = "{{$emp->designation}}" >
+        @error('designation')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Salary </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "salary" id = "" class="form-control" value = "{{$emp->salary}}" >
+        @error('salary')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+
+  < div class="mb-3 mt-5 text-dark" >
+    <input type="submit" value = "Update" class="btn btn-info text-dark cursor-pointer" >
       </div>
+      </form>
 
-    );
+      </div>
+      </body>
+      </html>
 
+      < !DOCTYPE html >
+        <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data - bs - theme = "dark" >
+          <head>
+          <meta charset="utf-8" >
+            <meta name="viewport" content = "width=device-width, initial-scale=1" >
 
-  }
+              <title>Exam </title>
 
+              < !--Fonts -->
+                <link rel="preconnect" href = "https://fonts.bunny.net" >
+                  <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel = "stylesheet" />
 
-header
-
-import './App.css';
-
-export default function Header()
-{
-    return(
-
-
-        <header >
-            <h1> Welcome to student Portal </h1>
-        </header>
-
-
-    );
-}
-
-footer
-
-import './App.css';
-
-export default function Footer()
-{
-    return(
+                    <link href="{{asset('css/bootstrap.min.css')}}" rel = "stylesheet" >
+                      <script src="{{asset('js/bootstrap.bundle.min.js')}}" > </script>
 
 
-        <footer >
-            <h4>Created by janvi</h4>
-        </footer>
+                        </head>
+                        < body >
+                        <div class="container mt-5" >
+                          <h1 class="h1" > Register Employee </h1>
 
+                            < form action = "{{ route('emp.store') }}" method = "post" class="mt-5 w-75" >
+                              @csrf
+                              < div class="mb-3 row" >
+                                <label for= "" class= "col-md-2" > Name </label>
+                                  < div class= "col-md-6" >
+                                  <input type= "text" name = "name" id = "" class="form-control" >
+                                    @error('name')
+                                    < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Email </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "email" id = "" class="form-control" >
+        @error('email')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Phone </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "phone" id = "" class="form-control" >
+        @error('phone')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Designation </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "designation" id = "" class="form-control" >
+        @error('designation')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
+  < div class="mb-3 row" >
+    <label for= "" class= "col-md-2" > Salary </label>
+      < div class= "col-md-6" >
+      <input type= "text" name = "salary" id = "" class="form-control" >
+        @error('salary')
+        < span class="text-danger" > {{ $message }}</span>
+@enderror
+</div>
+  </div>
 
-    );
+  < div class="mb-3 mt-5 text-dark" >
+    <input type="submit" value = "Add" class="btn btn-info text-dark cursor-pointer" >
+      </div>
+      </form>
 
-}
-
-sidebar
-
-import {Link,Routes,Route} from 'react-router-dom'
-import './App.css';
-import CheckBox  from './CheckBox';
-import RadioBox from './RadioBox';
-import StudentList from './StudentList';
-
-export default function Header()
-{
-    return(
-
-        <div className="container">
-            <div className="sidebar">
-                <h1>Sidebar</h1>
-                <ul>
-                    <li><Link to="/checkbox" >CheckBox</Link></li>
-                    <li><Link to="/radiobox" >RadioBox</Link></li>
-                    <li><Link to="/studentlist" >Students</Link></li>
-                </ul>
-            </div>
-            <div className="main">
-                <Routes>
-                    <Route path='/checkbox' element={<CheckBox />}> </Route>
-                    <Route path='/radiobox' element={<RadioBox />}> </Route>
-                    <Route path='/studentlist/' element={<StudentList />}> </Route>
-                    <Route path='/studentlist/:id' element={<StudentList />}> </Route>
-                </Routes>
-            </div>
-        </div>
-
-
-    );
-}
-
-
-student list
-
-import {useParams, Link} from 'react-router-dom';
-import './App.css';
-
-export default function StudentList()
-{
-    const {id} = useParams();
-   
-    return(
-        <div className='studentlist' >
-            <h1> Student List </h1>
-
-            <ul>
-                <li><Link to='/studentlist/1'>Student 1</Link></li>
-                <li><Link to='/studentlist/2'>Student 2</Link></li>
-                <li><Link to='/studentlist/3'>Student 3</Link></li>
-                <li><Link to='/studentlist/4'>Student 4</Link></li>
-                <li><Link to='/studentlist/5'>Student 5</Link></li>
-            </ul>
-            <br />
-            <br />
-
-            <p>
-                Student Details : {id}
-            </p>
-
-
-       </div>
-    );
-}
-
-
-radio box
-
-import './App.css';
-import { useState } from 'react';
-
-export default function RadioBox()
-{
-    const [clr,setClr] = useState('');
-
-    const handleClr = (e) => 
-    {
-        setClr(e.target.value);;
-    }
-
-    return(
-
-        <div className='radiobox' style={{ backgroundColor:clr }}>
-
-            <h1> RadioBox</h1>
-
-            <input type='radio' name='color' value='pink' onChange={handleClr} />Pink
-            <br />
-            <input type='radio' name='color' value='lightblue' onChange={handleClr} />Blue
-            <br />
-            <input type='radio' name='color' value='lightgreen' onChange={handleClr} />Green
-            <br />
-            <input type='radio' name='color' value='gray' onChange={handleClr} />Gray
-
-        </div>
-
-    );
-
-}
+      </div>
+      </body>
+      </html>
 
 
 
 
-check box
 
-import './App.css';
-import { useState } from 'react';
 
-export default function CheckBox()
-{
-
-    const [hobby , setHobby ] = useState([]);
-
-    const handlechange = (e) =>
-    {
-        const {value,checked} = e.target;
-        if(checked)
-        {
-            setHobby([...hobby,value]);
-        }
-        else
-        {
-            setHobby(hobby.filter((item) => item!== value));
-        }
-    }
-
-    return( 
-        <div className='checkbox'>
-            <h1>CheckBox</h1>
-            <hr />
-            <br />
-
-                <input type='checkbox' name='hobby' value='dance' onChange={handlechange}/>Dance
-                <br />
-
-                <input type='checkbox' name='hobby' value='cricket' onChange={handlechange}/>Cricket
-                <br />
-
-                <input type='checkbox' name='hobby' value='reading' onChange={handlechange}/>Reading
-                <br />
-
-                <input type='checkbox' name='hobby' value='swimming' onChange={handlechange}/>Swimming
-                <br />
-
-                <input type='checkbox' name='hobby' value='travelling' onChange={handlechange}/>Travelling
-                <br />
-
-                <input type='checkbox' name='hobby' value='photography' onChange={handlechange}/>Photography
-                <br />
-
-                <input type='checkbox' name='hobby' value='painting' onChange={handlechange}/>Painting
-                <br />
-
-                <input type='checkbox' name='hobby' value='gardening' onChange={handlechange}/>Gardening
-
-                  <br />  <br />
-            <p> Selected Item : {hobby.join(", ")}</p>
-        </div>
-    );
-}
